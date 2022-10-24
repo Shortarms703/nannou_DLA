@@ -60,7 +60,10 @@ fn update(app: &App, model: &mut Model, _update: Update) {
             let start = Instant::now();
             for e in model.particles.iter_mut().enumerate() {
                 let (n, p): (usize, &mut Particle) = e;
-                if model.dead_particles.collision(p) {
+                let start2 = Instant::now();
+                let collision = model.dead_particles.collision(p);
+                println!("collision: {:?}", start2.elapsed());
+                if collision {
                     model.dead_particles.insert(p.clone());
                     removed.push(n);
                 } else {

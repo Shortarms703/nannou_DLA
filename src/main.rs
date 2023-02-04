@@ -1,20 +1,11 @@
 mod particle;
 
-use std::time::Instant;
+// use std::time::Instant;
 use particle::{Particle, Sections};
 use nannou::prelude::*;
 
-fn main() {
-    // let mut a = Sections::new(20.);
-    // a.insert(Particle::new(0., 0., 10.));
-    // // a.insert(Particle::new(9., 9., 10.));
-    // // a.insert(Particle::new(10., 10., 10.));
-    // a.insert(Particle::new(11., 12., 10.));
-    // // a.insert(Particle::new(-1., 0., 10.));
-    // println!("{:#?}", a);
-    // let b = a.collision(&Particle::new(11., 10., 10.));
-    // println!("{:?}", b);
 
+fn main() {
     nannou::app(model)
         .update(update)
         .run();
@@ -36,9 +27,9 @@ fn model(app: &App) -> Model {
 
     Model {
         particle_radius: 10.,
-        particle_move_speed: 1.,
+        particle_move_speed: 3.,
         spawn_radius: 600.,
-        alive_particle_limit: 200,
+        alive_particle_limit: 25,
         dead_particles: {
             let mut sections = Sections::new(10.);
             sections.insert(Particle::new(0., 0., 10.));
@@ -49,20 +40,31 @@ fn model(app: &App) -> Model {
 }
 
 fn update(app: &App, model: &mut Model, _update: Update) {
-    for _ in 0..100 {
+    // for _ in 0..100 {
         for _ in 0..(model.alive_particle_limit - model.particles.len()) {
             let p = Particle::new_on_radius(model.spawn_radius, model.particle_radius);
             model.particles.push(p);
         }
 
         let mut removed = vec![];
-        // while removed.len() == 0 {
-            let start = Instant::now();
+        while removed.len() == 0 {
+            // let start = Instant::now();
             for e in model.particles.iter_mut().enumerate() {
                 let (n, p): (usize, &mut Particle) = e;
-                let start2 = Instant::now();
+
+                // let start2 = Instant::now();
                 let collision = model.dead_particles.collision(p);
-                println!("collision: {:?}", start2.elapsed());
+                // println!("outside Sections.collision: {:?}", start2.elapsed());
+
+                let all_particles = model.dead_particles.all_particles();
+                let mut b = vec![];
+                for p in all_particles {
+                    b.push(p.clone());
+                }
+                // let start3 = Instant::now();
+                p.collision(&b);
+                // println!("Particle.collision: {:?}", start3.elapsed());
+
                 if collision {
                     model.dead_particles.insert(p.clone());
                     removed.push(n);
@@ -71,22 +73,23 @@ fn update(app: &App, model: &mut Model, _update: Update) {
                     p.update(win, model.particle_move_speed);
                 }
             }
-            println!("collision check: {:?}", start.elapsed());
-        // }
+            // println!("collision check: {:?}", start.elapsed());
+        }
         for removed_point_index in removed {
             model.particles.remove(removed_point_index);
             model.particles.push(Particle::new_on_radius(model.spawn_radius, model.particle_radius));
         }
-    }
+    // }
 }
 
 fn view(app: &App, model: &Model, frame: Frame) {
+    app.main_window().capture_frame(format!("frames/{:03}.png", frame.nth()));
     let draw = app.draw();
 
     draw.background().color(BLACK);
-    for p in &model.particles {
-        draw.ellipse().x_y(p.get_pos().x, p.get_pos().y).w_h(p.get_radius(), p.get_radius()).color(WHITE);
-    }
+    // for p in &model.particles {
+    //     draw.ellipse().x_y(p.get_pos().x, p.get_pos().y).w_h(p.get_radius(), p.get_radius()).color(WHITE);
+    // }
     for p in model.dead_particles.all_particles() {
         draw.ellipse().x_y(p.get_pos().x, p.get_pos().y).w_h(p.get_radius(), p.get_radius()).color(AQUA);
     }
@@ -100,11 +103,11 @@ fn draw_fps(app: &App, draw: &Draw) {
     let fps = app.fps();
     let win = app.window_rect();
     let r = Rect::from_w_h(75.0, 15.0).top_left_of(win);
-    draw.rect()
-        .xy(r.xy())
-        .wh(r.wh())
-        .color(DIMGREY);
-    draw.text(&format!("fps: {:.2}", fps))
-        .xy(r.xy())
-        .color(WHITE);
+    // draw.rect()
+    //     .xy(r.xy())
+    //     .wh(r.wh())
+    //     .color(DIMGREY);
+    // draw.text(&format!("fps: {:.2}", fps))
+    //     .xy(r.xy())
+    //     .color(WHITE);
 }
